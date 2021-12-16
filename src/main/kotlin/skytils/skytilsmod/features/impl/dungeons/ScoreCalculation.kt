@@ -385,32 +385,35 @@ object ScoreCalculation {
                 } else if (1820 < countedSeconds && countedSeconds <= 3920) {
                     392 / 3f - 1 / 30f * countedSeconds
                 } else 0.0
-                text.add("§6Deaths:§a $deaths")
-                text.add("§6Missing Puzzles:§a $missingPuzzles")
-                text.add("§6Failed Puzzles:§a $failedPuzzles")
-                text.add("§6Secrets Found:§a $foundSecrets")
+                text.add("§9Dungeon Status")
+                text.add("§f• §eDeaths:§c $deaths")
+                text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
+                text.add("§f• §eFailed Puzzles:§c $failedPuzzles")
+                text.add("§f• §eSecrets Found:§a $foundSecrets")
                 if (totalSecrets != 0) {
-                    if (Skytils.config.scoreCalculationMethod == 0) text.add("§6Estimated Secret Count:§a $totalSecrets")
+                    if (Skytils.config.scoreCalculationMethod == 0) text.add("§f• §eEstimated Secret Count:§a $totalSecrets")
                     else {
                         if (clearedPercentage >= 80) {
-                            text.add("§6Estimated Secret Count:§a $totalSecrets")
+                            text.add("§f• §eEstimated Secret Count:§a $totalSecrets")
                         } else {
-                            text.add("§6Estimated Secret Count:§c HIDDEN")
+                            text.add("§f• §eEstimated Secret Count:§c HIDDEN")
                         }
                     }
                 }
-                text.add("§6Crypts:§a $crypts")
+                text.add("§f• §eCrypts:§a $crypts")
                 if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F6", "F7", "M6", "M7")) {
-                    text.add("§6Mimic Killed:" + if (mimicKilled) "§a ✓" else " §c X")
+                    text.add("§f• §eMimic Killed:" + if (mimicKilled) "§a ✓" else " §c X")
                 }
-                if (isPaul) {
-                    text.add("§6EZPZ: §a+10")
-                }
-                text.add("§6Skill Score:§a $skillScore")
-                if (totalSecrets != 0) text.add("§6Estimated Discovery Score:§a " + discoveryScore.toInt())
-                if (speedScore != 100.0) text.add("§6Speed Score:§a " + speedScore.toInt())
-                text.add("§6Estimated Bonus Score:§a $bonusScore")
-                if (totalSecrets != 0) text.add("§6Estimated Total Score:§a " + (skillScore + discoveryScore + speedScore + bonusScore).toInt())
+                text.add("")
+                text.add("§6Approx Score:")
+                text.add("§f• §eSkill:§a $skillScore")
+                if (totalSecrets != 0) text.add("§f• §eDiscovery Score:§a " + discoveryScore.toInt())
+                if (speedScore != 100.0) text.add("§f• §eSpeed Score:§a " + speedScore.toInt())
+                text.add("§f• §eBonus Score:§a $bonusScore")
+                val score = (skillScore + discoveryScore + speedScore + bonusScore).toInt()
+                if (totalSecrets != 0) text.add("§f• §eTotal Score:§a $score" + if(isPaul) " §7(§6+10§7)" else "")
+                val rank = if (score < 100) "§cD" else if (score < 160) "§9C" else if (score < 230) "§aB" else if (score < 270) "§5A" else if (score < 300) "§eS" else "§6S+"
+                if (totalSecrets != 0) text.add("§f• §eRank: $rank")
                 if (!Skytils.usingDungeonRooms) text.add("§cDownload the Dungeon Rooms Mod for discovery estimate.")
                 for (i in text.indices) {
                     val alignment = if (leftAlign) TextAlignment.LEFT_RIGHT else TextAlignment.RIGHT_LEFT
