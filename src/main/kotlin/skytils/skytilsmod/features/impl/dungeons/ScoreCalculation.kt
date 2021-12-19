@@ -44,6 +44,7 @@ import java.text.DecimalFormat
 import java.util.regex.Pattern
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 object ScoreCalculation {
@@ -121,8 +122,8 @@ object ScoreCalculation {
                             name.contains("Secrets Found:") -> {
                                 if (name.contains("%")) {
                                     val matcher = secretsFoundPercentagePattern.find(name) ?: continue
-                                    secretsFoundPercentage = matcher.groups["percentage"]?.value?.toDoubleOrNull() ?: 0.0
-                                    totalSecrets = if (foundSecrets > 0) ceil(foundSecrets / secretsFoundPercentage).toInt() else 0
+                                    secretsFoundPercentage = matcher.groups["percentage"]?.value?.toDoubleOrNull()?.div(100) ?: 0.0
+                                    totalSecrets = if (foundSecrets > 0) (foundSecrets / secretsFoundPercentage).roundToInt() else 0
                                 } else {
                                     val matcher = secretsFoundPattern.find(name) ?: continue
                                     foundSecrets = matcher.groups["secrets"]?.value?.toIntOrNull() ?: 0
@@ -291,11 +292,12 @@ object ScoreCalculation {
                     }
                 }
                 val skillScore = 100 - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
-                val secretFoundRequirement = secretsFoundPercentage / floorReq.secretPercentage
+                val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage
+                val secretFoundRequirement = ceil(secretFoundRequirementPercentage * totalSecrets)
                 val discoveryScore: Double = floor(
                     (60 * (clearedPercentage / 100f)).toDouble().coerceIn(0.0, 60.0)
                 ) + if (totalSecrets <= 0) 0.0 else floor(
-                    (40f * secretFoundRequirement).coerceIn(0.0, 40.0)
+                    (40f * secretFoundRequirementPercentage).coerceIn(0.0, 40.0)
                 )
                 val speedScore: Double
                 val bonusScore = (if (mimicKilled) 2 else 0) + crypts.coerceAtMost(5) + if (isPaul) 10 else 0
@@ -314,16 +316,16 @@ object ScoreCalculation {
                 text.add("§f• §eDeaths:§c $deaths")
                 text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
                 text.add("§f• §eFailed Puzzles:§c $failedPuzzles")
-                text.add("§f• §eSecrets:§a $foundSecrets§7/§e$totalSecrets")
+                text.add("§f• §eSecrets:${if (foundSecrets >= secretFoundRequirement) "§a" else "§c"} $foundSecrets§7/§a${secretFoundRequirement} §7(§6Total: ${totalSecrets}§7)")
                 text.add("§f• §eCrypts:§a $crypts")
                 if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F6", "F7", "M6", "M7")) {
                     text.add("§f• §eMimic:" + if (mimicKilled) "§a ✓" else " §c X")
                 }
                 text.add("")
                 text.add("§6Approx Score:")
-                text.add("§f• §eSkill:§a $skillScore")
+                text.add("§f• §eSkill Score:§a $skillScore")
                 if (totalSecrets != 0) text.add("§f• §eDiscovery Score:§a " + discoveryScore.toInt())
-                if (speedScore != 100.0) text.add("§f• §eSpeed Score:§a " + speedScore.toInt())
+                text.add("§f• §eSpeed Score:§a " + speedScore.toInt())
                 text.add("§f• §eBonus Score:§a $bonusScore")
                 val score = (skillScore + discoveryScore + speedScore + bonusScore).toInt()
                 if (totalSecrets != 0) text.add("§f• §eTotal Score:§a $score" + if(isPaul) " §7(§6+10§7)" else "")
