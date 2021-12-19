@@ -1,11 +1,11 @@
 # SkytilsMod
 ***
 <p align="center">
-  <a href="https://github.com/Skytils/SkytilsMod/releases" target="_blank">
-    <img alt="downloads" src="https://img.shields.io/github/v/release/Skytils/SkytilsMod?color=4166f5&style=flat-square" />
+  <a href="https://github.com/China-Han-1209/SkytilsMod/releases" target="_blank">
+    <img alt="downloads" src="https://img.shields.io/github/v/release/China-Han-1209/SkytilsMod?color=4166f5&style=flat-square" />
   </a>
-  <a href="https://github.com/Skytils/SkytilsMod/releases" target="_blank">
-    <img alt="downloads" src="https://img.shields.io/github/downloads/Skytils/SkytilsMod/total?color=4166f5&style=flat-square" />
+  <a href="https://github.com/China-Han-1209/SkytilsMod/releases" target="_blank">
+    <img alt="downloads" src="https://img.shields.io/github/downloads/China-Han-1209/SkytilsMod/total?color=4166f5&style=flat-square" />
   </a>
   <a href="https://github.com/Skytils/SkytilsMod/blob/main/LICENSE" target="_blank">
     <img alt="license" src="https://img.shields.io/github/license/Skytils/SkytilsMod?color=4166f5&style=flat-square" />
