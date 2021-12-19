@@ -293,7 +293,7 @@ object ScoreCalculation {
                 }
                 val skillScore = 100 - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage
-                val secretFoundRequirement = ceil(secretFoundRequirementPercentage * totalSecrets)
+                val secretFoundRequirement = ceil(floorReq.secretPercentage * totalSecrets)
                 val discoveryScore: Double = floor(
                     (60 * (clearedPercentage / 100f)).toDouble().coerceIn(0.0, 60.0)
                 ) + if (totalSecrets <= 0) 0.0 else floor(
