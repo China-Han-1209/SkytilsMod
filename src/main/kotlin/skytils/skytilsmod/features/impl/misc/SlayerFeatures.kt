@@ -66,6 +66,7 @@ import skytils.skytilsmod.events.impl.CheckRenderEntityEvent
 import skytils.skytilsmod.events.impl.PacketEvent.ReceiveEvent
 import skytils.skytilsmod.events.impl.RenderHUDEvent
 import skytils.skytilsmod.features.impl.handlers.MayorInfo
+import skytils.skytilsmod.mixins.transformers.accessors.AccessorMinecraft
 import skytils.skytilsmod.utils.*
 import skytils.skytilsmod.utils.NumberUtil.roundToPrecision
 import skytils.skytilsmod.utils.RenderUtil.drawFilledBoundingBox
@@ -215,15 +216,18 @@ class SlayerFeatures {
             if (!entity.hasCustomName()) return
             val name = entity.displayName.unformattedText
             if (Skytils.config.slayerBossHitbox && name.endsWith("§c❤") && !name.endsWith("§e0§c❤") && !mc.renderManager.isDebugBoundingBox) {
-                val x = entity.posX
-                val y = entity.posY
-                val z = entity.posZ
+                val x =
+                    entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (mc as AccessorMinecraft).timer.renderPartialTicks
+                val y =
+                    entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (mc as AccessorMinecraft).timer.renderPartialTicks
+                val z =
+                    entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (mc as AccessorMinecraft).timer.renderPartialTicks
                 if (ZOMBIE_MINIBOSSES.any { name.contains(it) }) {
                     drawOutlinedBoundingBox(
                         AxisAlignedBB(x - 0.5, y - 2, z - 0.5, x + 0.5, y, z + 0.5),
                         Color(0, 255, 255, 255),
                         3f,
-                        1f
+                        (mc as AccessorMinecraft).timer.renderPartialTicks
                     )
                 } else if (SPIDER_MINIBOSSES.any { name.contains(it) }) {
                     drawOutlinedBoundingBox(
@@ -234,21 +238,21 @@ class SlayerFeatures {
                             x + 0.625,
                             y - 0.25,
                             z + 0.625
-                        ), Color(0, 255, 255, 255), 3f, 1f
+                        ), Color(0, 255, 255, 255), 3f, (mc as AccessorMinecraft).timer.renderPartialTicks
                     )
                 } else if (WOLF_MINIBOSSES.any { name.contains(it) }) {
                     drawOutlinedBoundingBox(
                         AxisAlignedBB(x - 0.5, y - 1, z - 0.5, x + 0.5, y, z + 0.5),
                         Color(0, 255, 255, 255),
                         3f,
-                        1f
+                        (mc as AccessorMinecraft).timer.renderPartialTicks
                     )
                 } else if (ENDERMAN_MINIBOSSES.any { name.contains(it) }) {
                     drawOutlinedBoundingBox(
                         AxisAlignedBB(x - 0.5, y - 3, z - 0.5, x + 0.5, y, z + 0.5),
                         Color(0, 255, 255, 255),
                         3f,
-                        1f
+                        (mc as AccessorMinecraft).timer.renderPartialTicks
                     )
                 }
             }
