@@ -302,7 +302,7 @@ object ScoreCalculation {
                 val countedSeconds = secondsElapsed
                 val speedScore = if (countedSeconds <= floorReq.speed) {
                     100
-                }  else max(0, 100 - (countedSeconds - floorReq.speed).toInt().floorDiv(6))
+                }  else max(0, 100 - (countedSeconds - floorReq.speed).toInt().floorDiv(6 * (1 + (countedSeconds - floorReq.speed).toInt().floorDiv(60))))
                 text.add("§9Dungeon Status")
                 text.add("§f• §eDeaths:§c $deaths")
                 text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
