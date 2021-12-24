@@ -42,10 +42,7 @@ import skytils.skytilsmod.utils.graphics.colors.CommonColors
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.regex.Pattern
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.round
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 object ScoreCalculation {
 
@@ -70,7 +67,7 @@ object ScoreCalculation {
         "F3" to FloorRequirement(.5),
         "F4" to FloorRequirement(.6, 12 * 60),
         "F5" to FloorRequirement(.7),
-        "F6" to FloorRequirement(.85, 12 * 60),
+        "F6" to FloorRequirement(.85),
         "F7" to FloorRequirement(speed = 12 * 60),
         "M1" to FloorRequirement(speed = 8 * 60),
         "M2" to FloorRequirement(speed = 8 * 60),
@@ -293,44 +290,38 @@ object ScoreCalculation {
                 }
                 val skillScore = 100 - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage
-                val secretFoundRequirement = ceil(floorReq.secretPercentage * totalSecrets)
-                val discoveryScore: Double = floor(
+                val secretFoundRequirement = ceil(floorReq.secretPercentage * totalSecrets).toInt()
+                val roomClearScore = floor(
                     (60 * (clearedPercentage / 100f)).toDouble().coerceIn(0.0, 60.0)
-                ) + if (totalSecrets <= 0) 0.0 else floor(
+                )
+                val secretScore = if (totalSecrets <= 0) 0.0 else floor(
                     (40f * secretFoundRequirementPercentage).coerceIn(0.0, 40.0)
                 )
-                val speedScore: Double
+                val discoveryScore = roomClearScore + secretScore
                 val bonusScore = (if (mimicKilled) 2 else 0) + crypts.coerceAtMost(5) + if (isPaul) 10 else 0
                 val countedSeconds = secondsElapsed
-                // no idea how speed score works soooo
-                speedScore = (if (countedSeconds <= floorReq.speed) {
-                    100.0
-                } else if (countedSeconds < floorReq.speed + 100) {
-                    232 - 0.1 * countedSeconds
-                } else if (countedSeconds < floorReq.speed + 400) {
-                    161 - 0.05 * countedSeconds
-                } else if (countedSeconds < floorReq.speed + 2600) {
-                    392 / 3f - 1 / 30f * countedSeconds
-                } else 0.0).coerceIn(0.0, 100.0)
+                val speedScore = if (countedSeconds <= floorReq.speed) {
+                    100
+                }  else max(0, 100 - (countedSeconds - floorReq.speed).toInt().floorDiv(6))
                 text.add("§9Dungeon Status")
                 text.add("§f• §eDeaths:§c $deaths")
                 text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
                 text.add("§f• §eFailed Puzzles:§c $failedPuzzles")
-                text.add("§f• §eSecrets:${if (foundSecrets >= secretFoundRequirement) "§a" else "§c"} $foundSecrets§7/§a${secretFoundRequirement} §7(§6Total: ${totalSecrets}§7)")
+                if (discoveryScore > 0) text.add("§f• §eSecrets:${if (foundSecrets >= secretFoundRequirement) "§a" else "§c"} $foundSecrets§7/§a${secretFoundRequirement} §7(§6Total: ${totalSecrets}§7)")
                 text.add("§f• §eCrypts:§a $crypts")
                 if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F6", "F7", "M6", "M7")) {
                     text.add("§f• §eMimic:" + if (mimicKilled) "§a ✓" else " §c X")
                 }
                 text.add("")
-                text.add("§6Approx Score:")
+                text.add("§6Score:")
                 text.add("§f• §eSkill Score:§a $skillScore")
-                if (totalSecrets != 0) text.add("§f• §eDiscovery Score:§a " + discoveryScore.toInt())
+                text.add("§f• §eExplore Score:§a " + discoveryScore.toInt() + " §7(§e${roomClearScore.toInt()} §7+ §6${secretScore.toInt()}§7)")
                 text.add("§f• §eSpeed Score:§a " + speedScore.toInt())
                 text.add("§f• §eBonus Score:§a $bonusScore")
                 val score = (skillScore + discoveryScore + speedScore + bonusScore).toInt()
-                if (totalSecrets != 0) text.add("§f• §eTotal Score:§a $score" + if(isPaul) " §7(§6+10§7)" else "")
+                text.add("§f• §eTotal Score:§a $score" + if(isPaul) " §7(§6+10§7)" else "")
                 val rank = if (score < 100) "§cD" else if (score < 160) "§9C" else if (score < 230) "§aB" else if (score < 270) "§5A" else if (score < 300) "§eS" else "§6S+"
-                if (totalSecrets != 0) text.add("§f• §eRank: $rank")
+                text.add("§f• §eRank: $rank")
                 for (i in text.indices) {
                     val alignment = if (leftAlign) TextAlignment.LEFT_RIGHT else TextAlignment.RIGHT_LEFT
                     ScreenRenderer.fontRenderer.drawString(
