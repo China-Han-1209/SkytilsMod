@@ -68,7 +68,7 @@ object ScoreCalculation {
         "F4" to FloorRequirement(.6, 12 * 60),
         "F5" to FloorRequirement(.7),
         "F6" to FloorRequirement(.85),
-        "F7" to FloorRequirement(speed = 12 * 60),
+        "F7" to FloorRequirement(speed = 14 * 60),
         "M1" to FloorRequirement(speed = 8 * 60),
         "M2" to FloorRequirement(speed = 8 * 60),
         "M3" to FloorRequirement(speed = 8 * 60),
@@ -87,6 +87,8 @@ object ScoreCalculation {
     var totalSecrets = 0
     var crypts = 0
     var secretsFoundPercentage = 0.000
+    var speedScoreCancelled = 0
+    var secondsCancelled = 6
     var mimicKilled = false
 
     var floorReq = floorRequirements["default"]!!
@@ -300,9 +302,11 @@ object ScoreCalculation {
                 val discoveryScore = roomClearScore + secretScore
                 val bonusScore = (if (mimicKilled) 2 else 0) + crypts.coerceAtMost(5) + if (isPaul) 10 else 0
                 val countedSeconds = secondsElapsed
-                val speedScore = if (countedSeconds <= floorReq.speed) {
-                    100
-                }  else max(0, 100 - (countedSeconds - floorReq.speed).toInt().floorDiv(6 * (1 + (countedSeconds - floorReq.speed).toInt().floorDiv(60))))
+                if(countedSeconds.toInt() - secondsCancelled <= floorReq.speed && speedScoreCancelled >= 100){
+                    speedScoreCancelled++
+                    secondsCancelled += (speedScoreCancelled / 10 + 1) * 6
+                }
+                val speedScore = max(0, 100 - speedScoreCancelled)
                 text.add("§9Dungeon Status")
                 text.add("§f• §eDeaths:§c $deaths")
                 text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
