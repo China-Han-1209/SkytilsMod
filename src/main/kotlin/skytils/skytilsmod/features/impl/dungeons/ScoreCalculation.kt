@@ -127,7 +127,7 @@ object ScoreCalculation {
                                     val matcher = secretsFoundPercentagePattern.find(name) ?: continue
                                     val percentage = matcher.groups["percentage"]?.value?.toIntOrNull() ?: 0
                                     secretsFoundPercentage = percentage.toDouble() / 100
-                                    calcTotalSecrets = if (foundSecrets > 0) floor(100 / percentage * foundSecrets + 0.5) else 0.0
+                                    calcTotalSecrets = if (foundSecrets > 0 && percentage != 0) floor(100 / percentage * foundSecrets + 0.5) else 0.0
                                 } else {
                                     val matcher = secretsFoundPattern.find(name) ?: continue
                                     foundSecrets = matcher.groups["secrets"]?.value?.toIntOrNull() ?: 0
@@ -308,9 +308,9 @@ object ScoreCalculation {
                         }
                     }
                 }
-                val totalRoom = floor(100 / clearedPercentage * completedRooms + 0.5).toInt()
+                val totalRoom = if(clearedPercentage > 0) floor(100 / clearedPercentage * completedRooms + 0.5).toInt() else 0
                 val roomClear = if(bloodClear) completedRooms + 1 else completedRooms
-                val trueClearPercentage = min((roomClear / totalRoom).toDouble(), 100.000000000)
+                val trueClearPercentage = if (totalRoom > 0) min((roomClear / totalRoom).toDouble(), 100.000000000) else 0.000000000
                 val skillScore = (20 + floor(80 * (trueClearPercentage)).toInt()) - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage
                 val secretFoundRequirement = ceil(floorReq.secretPercentage * calcTotalSecrets).toInt()
