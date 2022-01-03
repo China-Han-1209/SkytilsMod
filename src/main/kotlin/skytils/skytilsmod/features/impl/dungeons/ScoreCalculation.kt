@@ -39,6 +39,7 @@ import skytils.skytilsmod.utils.graphics.ScreenRenderer
 import skytils.skytilsmod.utils.graphics.SmartFontRenderer
 import skytils.skytilsmod.utils.graphics.SmartFontRenderer.TextAlignment
 import skytils.skytilsmod.utils.graphics.colors.CommonColors
+import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.regex.Pattern
@@ -57,6 +58,7 @@ object ScoreCalculation {
         Regex("§r (?<puzzle>.+): §r§7\\[§r§c§l✖§r§7] §r§f(?:\\((?:§r(?<player>.+))?§r§f\\)|\\(§r§f})§r")
     private val secretsFoundPattern = Regex("§r Secrets Found: §r§b(?<secrets>\\d+)§r")
     private val secretsFoundPercentagePattern = Regex("§r Secrets Found: §r§[ae](?<percentage>[\\d.]+)%§r")
+    private val completedRoomPattern = Regex("§r Completed Rooms: §r§d(?<rooms>\\d+)§r")
     private val cryptsPattern = Regex("§r Crypts: §r§6(?<crypts>\\d+)§r")
 
     val floorRequirements = hashMapOf(
@@ -68,7 +70,7 @@ object ScoreCalculation {
         "F4" to FloorRequirement(.6, 12 * 60),
         "F5" to FloorRequirement(.7),
         "F6" to FloorRequirement(.85),
-        "F7" to FloorRequirement(speed = 14 * 60),
+        "F7" to FloorRequirement(speed = 12 * 60),
         "M1" to FloorRequirement(speed = 8 * 60),
         "M2" to FloorRequirement(speed = 8 * 60),
         "M3" to FloorRequirement(speed = 8 * 60),
@@ -84,7 +86,9 @@ object ScoreCalculation {
     var missingPuzzles = 0
     var failedPuzzles = 0
     var foundSecrets = 0
-    var totalSecrets = 0
+    var calcTotalSecrets = 0.0
+    var completedRooms = 0
+    var bloodClear = false
     var crypts = 0
     var secretsFoundPercentage = 0.000
     var speedScoreCancelled = 0
@@ -121,8 +125,9 @@ object ScoreCalculation {
                             name.contains("Secrets Found:") -> {
                                 if (name.contains("%")) {
                                     val matcher = secretsFoundPercentagePattern.find(name) ?: continue
-                                    secretsFoundPercentage = matcher.groups["percentage"]?.value?.toDoubleOrNull()?.div(100) ?: 0.0
-                                    totalSecrets = if (foundSecrets > 0) (foundSecrets / secretsFoundPercentage).roundToInt() else 0
+                                    val percentage = matcher.groups["percentage"]?.value?.toIntOrNull() ?: 0
+                                    secretsFoundPercentage = percentage.toDouble() / 100
+                                    calcTotalSecrets = if (foundSecrets > 0) floor(100 / percentage * foundSecrets + 0.5) else 0.0
                                 } else {
                                     val matcher = secretsFoundPattern.find(name) ?: continue
                                     foundSecrets = matcher.groups["secrets"]?.value?.toIntOrNull() ?: 0
@@ -131,6 +136,10 @@ object ScoreCalculation {
                             name.contains("Crypts:") -> {
                                 val matcher = cryptsPattern.find(name) ?: continue
                                 crypts = matcher.groups["crypts"]?.value?.toIntOrNull() ?: 0
+                            }
+                            name.contains("Completed Rooms:") -> {
+                                val matcher = completedRoomPattern.find(name) ?: continue
+                                completedRooms = matcher.groups["rooms"]?.value?.toIntOrNull() ?: 0
                             }
                         }
                     } catch (ignored: NumberFormatException) {
@@ -189,6 +198,15 @@ object ScoreCalculation {
                     }
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    fun onChat(event: ClientChatReceivedEvent) {
+        if (!Utils.inDungeons) return
+        val message = event.message.formattedText
+        if(message == "§r§c[BOSS] The Watcher§r§f: You have proven yourself. You may pass.§r"){
+            bloodClear = true
         }
     }
 
@@ -290,19 +308,22 @@ object ScoreCalculation {
                         }
                     }
                 }
-                val skillScore = 100 - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
+                val totalRoom = floor(100 / clearedPercentage * completedRooms + 0.5).toInt()
+                val roomClear = if(bloodClear) completedRooms + 1 else completedRooms
+                val trueClearPercentage = min((roomClear / totalRoom).toDouble(), 100.000000000)
+                val skillScore = (20 + floor(80 * (trueClearPercentage)).toInt()) - 2 * deaths - 14 * (missingPuzzles + failedPuzzles)
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage
-                val secretFoundRequirement = ceil(floorReq.secretPercentage * totalSecrets).toInt()
+                val secretFoundRequirement = ceil(floorReq.secretPercentage * calcTotalSecrets).toInt()
                 val roomClearScore = floor(
-                    (60 * (clearedPercentage / 100f)).toDouble().coerceIn(0.0, 60.0)
+                    (60 * trueClearPercentage).toDouble().coerceIn(0.0, 60.0)
                 )
-                val secretScore = if (totalSecrets <= 0) 0.0 else floor(
+                val secretScore = if (calcTotalSecrets <= 0) 0.0 else floor(
                     (40f * secretFoundRequirementPercentage).coerceIn(0.0, 40.0)
                 )
                 val discoveryScore = roomClearScore + secretScore
                 val bonusScore = (if (mimicKilled) 2 else 0) + crypts.coerceAtMost(5) + if (isPaul) 10 else 0
                 val countedSeconds = secondsElapsed
-                if(countedSeconds.toInt() - secondsCancelled <= floorReq.speed && speedScoreCancelled >= 100){
+                if(countedSeconds.toInt() - secondsCancelled >= floorReq.speed && speedScoreCancelled < 100){
                     speedScoreCancelled++
                     secondsCancelled += (speedScoreCancelled / 10 + 1) * 6
                 }
@@ -311,7 +332,7 @@ object ScoreCalculation {
                 text.add("§f• §eDeaths:§c $deaths")
                 text.add("§f• §eMissing Puzzles:§c $missingPuzzles")
                 text.add("§f• §eFailed Puzzles:§c $failedPuzzles")
-                if (discoveryScore > 0) text.add("§f• §eSecrets:${if (foundSecrets >= secretFoundRequirement) "§a" else "§c"} $foundSecrets§7/§a${secretFoundRequirement} §7(§6Total: ${totalSecrets}§7)")
+                if (discoveryScore > 0) text.add("§f• §eSecrets:${if (foundSecrets >= secretFoundRequirement) "§a" else "§c"} $foundSecrets§7/§a${secretFoundRequirement} §7(§6Total: ${calcTotalSecrets.toInt()}§7)")
                 text.add("§f• §eCrypts:§a $crypts")
                 if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F6", "F7", "M6", "M7")) {
                     text.add("§f• §eMimic:" + if (mimicKilled) "§a ✓" else " §c X")
