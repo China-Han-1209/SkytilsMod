@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,6 +17,7 @@
  */
 package skytils.skytilsmod.commands.impl
 
+import gg.essential.universal.UChat
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.command.ICommandSender
 import net.minecraft.command.SyntaxErrorException
@@ -36,7 +37,7 @@ object ArmorColorCommand : BaseCommand("armorcolor", listOf("armourcolour", "arm
     override fun processCommand(sender: ICommandSender, args: Array<String>) {
         val player = sender as EntityPlayerSP
         if (args.isEmpty()) {
-            player.addChatMessage(ChatComponentText(getCommandUsage(sender)))
+            UChat.chat(getCommandUsage(sender))
             return
         }
         val subcommand = args[0].lowercase()

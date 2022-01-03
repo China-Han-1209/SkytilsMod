@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -25,12 +25,16 @@ plugins {
     kotlin("jvm") version "1.6.10"
     id("net.minecraftforge.gradle.forge") version "6f5327"
     id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("org.spongepowered.mixin") version "d5f9873d60"
+    id("com.github.skytils.knockoffmixingradle") version "7d2bb154b0"
     java
 }
 
-version = "1.0.9-RC1"
+version = "1.0.9-RC2"
 group = "skytils.skytilsmod"
+
+mixin {
+    refmapName = "mixins.skytils.refmap.json"
+}
 
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
@@ -38,22 +42,25 @@ minecraft {
     mappings = "stable_22"
     makeObfSourceJar = false
     isGitVersion = false
-    clientJvmArgs + arrayOf(
-        "-Dfml.coreMods.load=skytils.skytilsmod.tweaker.SkytilsLoadingPlugin",
-        "-Delementa.dev=true",
-        "-Delementa.debug=true",
-        "-Dasmhelper.verbose=true"
+    clientJvmArgs.addAll(
+        arrayOf(
+            "-Dfml.coreMods.load=skytils.skytilsmod.tweaker.SkytilsLoadingPlugin",
+            "-Delementa.dev=true",
+            "-Delementa.debug=true",
+            "-Dasmhelper.verbose=true"
+        )
     )
-    clientRunArgs + arrayOf(
-        "--tweakClass skytils.skytilsmod.tweaker.SkytilsTweaker",
-        "--mixin mixins.skytils.json"
+    clientRunArgs.addAll(
+        arrayOf(
+            "--tweakClass skytils.skytilsmod.tweaker.SkytilsTweaker",
+            "--mixin mixins.skytils.json"
+        )
     )
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven("https://repo.spongepowered.org/repository/maven-public/")
     maven("https://repo.sk1er.club/repository/maven-public/")
     maven("https://repo.sk1er.club/repository/maven-releases/")
     maven("https://jitpack.io")
@@ -64,11 +71,8 @@ val shadowMe: Configuration by configurations.creating {
 }
 
 dependencies {
-    annotationProcessor("org.spongepowered:mixin:0.7.11-SNAPSHOT")
-    implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT")
-
-    shadowMe("gg.essential:loader-launchwrapper:1.1.2")
-    implementation("gg.essential:essential-1.8.9-forge:1664") {
+    shadowMe("gg.essential:loader-launchwrapper:1.1.3")
+    implementation("gg.essential:essential-1.8.9-forge:1733") {
         exclude(module = "asm")
         exclude(module = "asm-commons")
         exclude(module = "asm-tree")
@@ -92,15 +96,8 @@ dependencies {
     }
 }
 
-mixin {
-    disableRefMapWarning = true
-    defaultObfuscationEnv = searge
-    add(sourceSets.main.get(), "mixins.skytils.refmap.json")
-}
-
 sourceSets {
     main {
-        ext["refmap"] = "mixins.skytils.refmap.json"
         output.setResourcesDir(file("${buildDir}/classes/kotlin/main"))
     }
 }
@@ -172,9 +169,16 @@ tasks {
     withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = "1.8"
-            freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
+            freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn")
         }
-        kotlinDaemonJvmArguments.set(listOf("-Xmx4G", "-Dkotlin.enableCacheBuilding=true", "-Dkotlin.useParallelTasks=true", "-Dkotlin.enableFastIncremental=true"))
+        kotlinDaemonJvmArguments.set(
+            listOf(
+                "-Xmx2G",
+                "-Dkotlin.enableCacheBuilding=true",
+                "-Dkotlin.useParallelTasks=true",
+                "-Dkotlin.enableFastIncremental=true"
+            )
+        )
     }
     named<TaskSingleReobf>("reobfJar") {
         enabled = false

@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -227,31 +227,59 @@ object Config : Vigilant(File("./config/skytils/config.toml"), "Skytils", sortin
 
     @Property(
         type = PropertyType.SWITCH, name = "Show Dungeon Score Estimate",
-        description = "Shows an estimate of the current dungeon score.\nRequires the Dungeon Rooms mod in order to use.",
+        description = "Shows an estimate of the current dungeon score.",
         category = "Dungeons", subcategory = "Score Calculation"
     )
     var showScoreCalculation = false
 
     @Property(
+        type = PropertyType.SWITCH, name = "Minimized Dungeon Score Estimate",
+        description = "Only shows the dungeon score.",
+        category = "Dungeons", subcategory = "Score Calculation"
+    )
+    var minimizedScoreCalculation = false
+
+    @Property(
         type = PropertyType.SWITCH, name = "Score Calculation Party Assist",
-        description = "Helps your party determine the amount of secrets in the dungeon by sending room info in party chat.\n§cThis feature is use at your own risk.",
+        description = "Helps your party determine the state of the mimic in your dungeon by sending in party chat.\n§cThis feature is use at your own risk.",
         category = "Dungeons", subcategory = "Score Calculation"
     )
     var scoreCalculationAssist = false
 
     @Property(
-        type = PropertyType.SWITCH, name = "Receive Help for Secret Counts",
-        description = "Receive help from your party in order to determine the amount of secrets in the dungeon.",
+        type = PropertyType.SWITCH, name = "Receive Score Calculation Party Assist",
+        description = "Receive help from your party in order to determine the state of the mimic in the dungeon.",
         category = "Dungeons", subcategory = "Score Calculation"
     )
     var scoreCalculationReceiveAssist = false
 
     @Property(
-        type = PropertyType.SWITCH, name = "Remove Party Chat Notification Sounds",
+        type = PropertyType.SWITCH, name = "Remove Party Assist Chat Notification Sounds",
         description = "Removes party chat notification sounds caused by score calculation.\n§cDo not turn this on if you do not use the Hypixel feature.",
         category = "Dungeons", subcategory = "Score Calculation"
     )
     var removePartyChatNotifFromScoreCalc = false
+
+    @Property(
+        type = PropertyType.SWITCH, name = "Allow Mimic Dead! from other Mods",
+        description = "Uses the Mimic dead! in order to determine the state of the mimic in the dungeon.",
+        category = "Dungeons", subcategory = "Score Calculation"
+    )
+    var receiveHelpFromOtherModMimicDead = false
+
+    @Property(
+        type = PropertyType.SWITCH, name = "Send message on 270 score",
+        description = "Send message on 270 score.",
+        category = "Dungeons", subcategory = "Score Calculation"
+    )
+    var sendMessageOn270Score = false
+
+    @Property(
+        type = PropertyType.SWITCH, name = "Send message on 300 score",
+        description = "Send message on 300 score.",
+        category = "Dungeons", subcategory = "Score Calculation"
+    )
+    var sendMessageOn300Score = false
 
     @Property(
         type = PropertyType.SWITCH, name = "Box Skeleton Masters",
@@ -1112,6 +1140,14 @@ object Config : Vigilant(File("./config/skytils/config.toml"), "Skytils", sortin
     var preventPlacingWeapons = false
 
     @Property(
+        type = PropertyType.SWITCH, name = "Wither Shield Cooldown Tracker",
+        description = "Displays the cooldowns for your wither shield (because apparently people can't follow directions)",
+        category = "Miscellaneous", subcategory = "Items",
+        searchTags = ["Wither Impact", "Hyperion", "Wither Shield", "Scylla", "Astraea", "Valkyrie"]
+    )
+    var witherShieldCooldown = false
+
+    @Property(
         type = PropertyType.SWITCH, name = "Show Dungeon Item Level",
         description = "Shows the amount of stars on dungeon items as the stack size.",
         category = "Miscellaneous", subcategory = "Items"
@@ -1131,6 +1167,13 @@ object Config : Vigilant(File("./config/skytils/config.toml"), "Skytils", sortin
         category = "Miscellaneous", subcategory = "Items"
     )
     var showEnchantedBookTier = false
+
+    @Property(
+        type = PropertyType.SWITCH, name = "Book Helper",
+        description = "Shows if you're combining incompatible books",
+        category = "Miscellaneous", subcategory = "Items"
+    )
+    var bookHelper = false
 
     @Property(
         type = PropertyType.SWITCH, name = "Show Etherwarp Teleport Position",
@@ -1530,11 +1573,26 @@ object Config : Vigilant(File("./config/skytils/config.toml"), "Skytils", sortin
     var powerOrbLock = false
 
     @Property(
+        type = PropertyType.NUMBER, name = "Power Orb Lock Duration",
+        description = "Needs Power Orb Lock to be active. Allows overwriting a power orb, if it has less time left than this option.",
+        min = 1, max = 120,
+        category = "Miscellaneous", subcategory = "Quality of Life"
+    )
+    var powerOrbDuration = 10
+
+    @Property(
         type = PropertyType.SWITCH, name = "Prevent Log Spam",
         description = "Prevents your logs from being spammed with exceptions while on Hypixel.",
         category = "Miscellaneous", subcategory = "Quality of Life"
     )
     var preventLogSpam = false
+
+    @Property(
+        type = PropertyType.SWITCH, name = "Press Enter to confirm Sign Popups",
+        description = "Allows pressing enter to confirm a sign popup, such as the bazaar or auction house prices.",
+        category = "Miscellaneous", subcategory = "Quality of Life"
+    )
+    var pressEnterToConfirmSignQuestion = true
 
     @Property(
         type = PropertyType.TEXT, name = "Protect Items Above Value",
@@ -2313,6 +2371,8 @@ object Config : Vigilant(File("./config/skytils/config.toml"), "Skytils", sortin
         addDependency("tankRadiusDisplayColor", "showTankRadius")
         addDependency("boxedTankColor", "boxedTanks")
         addDependency("boxedProtectedTeammatesColor", "boxedProtectedTeammates")
+
+        addDependency("powerOrbDuration", "powerOrbLock")
 
         addDependency("yangGlyphColor", "highlightYangGlyph")
         addDependency("nukekebiHeadColor", "highlightNukekebiHeads")

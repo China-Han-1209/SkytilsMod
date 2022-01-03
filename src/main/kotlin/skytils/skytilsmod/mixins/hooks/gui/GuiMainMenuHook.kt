@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -27,6 +27,6 @@ fun setSplashText(gui: GuiMainMenu, cal: Calendar) {
     gui as AccessorGuiMainMenu
     if (cal.get(Calendar.MONTH) + 1 == 2 && cal.get(Calendar.DATE) == 5) {
         val numBirthday = cal.get(Calendar.YEAR) - 2021
-        gui.splashText = "§z§kstay §zHappy ${numBirthday.addSuffix()} Birthday Skytils! §kmadL"
+        gui.splashText = "§z§kstay§z Happy ${numBirthday.addSuffix()} Birthday Skytils! §kmadL"
     }
 }

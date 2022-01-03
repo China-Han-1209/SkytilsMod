@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -58,6 +58,7 @@ import skytils.skytilsmod.Skytils
 import skytils.skytilsmod.Skytils.Companion.mc
 import skytils.skytilsmod.core.GuiManager
 import skytils.skytilsmod.core.GuiManager.Companion.createTitle
+import skytils.skytilsmod.core.SoundQueue
 import skytils.skytilsmod.core.TickTask
 import skytils.skytilsmod.core.structure.FloatPair
 import skytils.skytilsmod.core.structure.GuiElement
@@ -71,7 +72,6 @@ import skytils.skytilsmod.utils.*
 import skytils.skytilsmod.utils.NumberUtil.roundToPrecision
 import skytils.skytilsmod.utils.RenderUtil.drawFilledBoundingBox
 import skytils.skytilsmod.utils.RenderUtil.drawOutlinedBoundingBox
-import skytils.skytilsmod.utils.ScoreboardUtil.cleanSB
 import skytils.skytilsmod.utils.ScoreboardUtil.sidebarLines
 import skytils.skytilsmod.utils.graphics.ScreenRenderer
 import skytils.skytilsmod.utils.graphics.SmartFontRenderer
@@ -87,10 +87,10 @@ class SlayerFeatures {
         if (!Utils.inSkyblock) return
         if (event.phase != TickEvent.Phase.START || mc.theWorld == null || mc.thePlayer == null) return
         lastTickHasSlayerText = hasSlayerText
-        hasSlayerText = sidebarLines.any { cleanSB(it) == "Slay the boss!" }
+        hasSlayerText = sidebarLines.any { it == "Slay the boss!" }
         if (!lastTickHasSlayerText && hasSlayerText) {
             val currentTier =
-                sidebarLines.map { cleanSB(it) }.find { it.startsWith("Voidgloom Seraph") }
+                sidebarLines.find { it.startsWith("Voidgloom Seraph") }
                     ?.substringAfter("Voidgloom Seraph")?.drop(1)
                     ?: ""
             expectedMaxHp = BossHealths["Voidgloom"]?.get(currentTier)?.asInt
@@ -149,17 +149,15 @@ class SlayerFeatures {
                             else -> false
                         }
                         if (isDanger) {
-                            mc.thePlayer.playSound("random.orb", 1f, 1f)
+                            SoundQueue.addToQueue("random.orb", 1f)
                         }
                     }
                 }
             }
             if (Skytils.config.showRNGMeter) {
-                val lines = sidebarLines.map { cleanSB(it) }
-
-                for ((index, line) in lines.withIndex()) {
+                for ((index, line) in sidebarLines.withIndex()) {
                     if (line == "Slayer Quest") {
-                        val boss = lines.elementAtOrNull(index - 1) ?: continue
+                        val boss = sidebarLines.elementAtOrNull(index - 1) ?: continue
                         if (boss.startsWith("Revenant Horror")) {
                             BossStatus.setBossStatus(
                                 RNGMeter(
@@ -284,9 +282,7 @@ class SlayerFeatures {
 
         if (packet is S29PacketSoundEffect) {
             if (Skytils.config.slayerMinibossSpawnAlert && slayerEntity == null && packet.soundName == "random.explode" && packet.volume == 0.6f && packet.pitch == 9 / 7f && GuiManager.title != "§cMINIBOSS" && sidebarLines.any {
-                    cleanSB(
-                        it
-                    ).contains("Slayer Quest")
+                    it.contains("Slayer Quest")
                 }) {
                 createTitle("§cMINIBOSS", 20)
             }
@@ -297,11 +293,9 @@ class SlayerFeatures {
             if (unformatted.trim().startsWith("RNGesus Meter")) {
                 val rngMeter =
                     unformatted.filter { it.isDigit() || it == '.' }.toFloat()
-                val lines = sidebarLines.map { cleanSB(it) }
-
-                for ((index, line) in lines.withIndex()) {
+                for ((index, line) in sidebarLines.withIndex()) {
                     if (line == "Slayer Quest") {
-                        val boss = lines.elementAtOrNull(index - 1) ?: continue
+                        val boss = sidebarLines.elementAtOrNull(index - 1) ?: continue
                         if (boss.startsWith("Revenant Horror")) {
                             Skytils.config.revRNG = rngMeter
                             break
@@ -925,7 +919,7 @@ class SlayerFeatures {
                             nearby.displayName.formattedText.startsWith("§c☠ §fAtoned Horror")
                         ) {
                             val currentTier =
-                                sidebarLines.map { cleanSB(it) }.find { it.startsWith("Revenant Horror ") }
+                                sidebarLines.find { it.startsWith("Revenant Horror ") }
                                     ?.substringAfter("Revenant Horror ") ?: ""
                             if ((if (MayorInfo.mayorPerks.contains("DOUBLE MOBS HP!!!")) 2 else 1) * (BossHealths["Revenant"]?.get(
                                     currentTier
@@ -983,7 +977,7 @@ class SlayerFeatures {
                     if (nearby.displayName.formattedText.startsWith(nameStart)
                     ) {
                         val currentTier =
-                            sidebarLines.map { cleanSB(it) }.find { it.startsWith(name) }?.substringAfter(name)?.drop(1)
+                            sidebarLines.find { it.startsWith(name) }?.substringAfter(name)?.drop(1)
                                 ?: ""
                         val expectedHealth =
                             (if (MayorInfo.mayorPerks.contains("DOUBLE MOBS HP!!!")) 2 else 1) * (BossHealths[name.substringBefore(

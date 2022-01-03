@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -21,13 +21,12 @@ package skytils.skytilsmod
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import gg.essential.vigilance.gui.SettingsGui
+import kotlinx.coroutines.asCoroutineDispatcher
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.settings.KeyBinding
-import net.minecraft.entity.Entity
-import net.minecraft.launchwrapper.Launch
 import net.minecraft.network.play.client.C01PacketChatMessage
 import net.minecraft.network.play.server.S1CPacketEntityMetadata
 import net.minecraftforge.client.ClientCommandHandler
@@ -40,6 +39,7 @@ import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.network.FMLNetworkEvent
@@ -80,8 +80,6 @@ import skytils.skytilsmod.mixins.transformers.accessors.AccessorSettingsGui
 import skytils.skytilsmod.utils.*
 import skytils.skytilsmod.utils.graphics.ScreenRenderer
 import java.io.File
-import java.lang.invoke.MethodHandles
-import java.lang.invoke.MethodType
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadPoolExecutor
 
@@ -98,7 +96,7 @@ class Skytils {
     companion object {
         const val MODID = "skytils"
         const val MOD_NAME = "Skytils"
-        const val VERSION = "1.0.9-RC1"
+        const val VERSION = "1.0.9-RC2"
 
         @JvmField
         val gson: Gson = GsonBuilder()
@@ -138,6 +136,9 @@ class Skytils {
         @JvmField
         val threadPool = Executors.newFixedThreadPool(10) as ThreadPoolExecutor
 
+        @JvmField
+        val dispatcher = threadPool.asCoroutineDispatcher()
+
         val hylinAPI = createHylinAPI("", false)
     }
 
@@ -158,76 +159,80 @@ class Skytils {
 
         UpdateChecker.downloadDeleteTask()
 
-        MinecraftForge.EVENT_BUS.register(this)
-        MinecraftForge.EVENT_BUS.register(ChatListener())
-        MinecraftForge.EVENT_BUS.register(DungeonListener)
-        MinecraftForge.EVENT_BUS.register(guiManager)
-        MinecraftForge.EVENT_BUS.register(MayorInfo)
-        MinecraftForge.EVENT_BUS.register(SBInfo)
-        MinecraftForge.EVENT_BUS.register(SoundQueue)
-        MinecraftForge.EVENT_BUS.register(TickTaskManager)
-        MinecraftForge.EVENT_BUS.register(UpdateChecker)
+        arrayOf(
+            this,
+            ChatListener(),
+            DungeonListener,
+            guiManager,
+            MayorInfo,
+            SBInfo,
+            SoundQueue,
+            TickTaskManager,
+            UpdateChecker,
 
-        MinecraftForge.EVENT_BUS.register(AlignmentTaskSolver())
-        MinecraftForge.EVENT_BUS.register(ArmorColor())
-        MinecraftForge.EVENT_BUS.register(AuctionData())
-        MinecraftForge.EVENT_BUS.register(AuctionPriceOverlay())
-        MinecraftForge.EVENT_BUS.register(BlazeSolver())
-        MinecraftForge.EVENT_BUS.register(BossHPDisplays())
-        MinecraftForge.EVENT_BUS.register(BoulderSolver())
-        MinecraftForge.EVENT_BUS.register(ChatTabs)
-        MinecraftForge.EVENT_BUS.register(ChestProfit())
-        MinecraftForge.EVENT_BUS.register(ClickInOrderSolver())
-        MinecraftForge.EVENT_BUS.register(CreeperSolver())
-        MinecraftForge.EVENT_BUS.register(CommandAliases())
-        MinecraftForge.EVENT_BUS.register(CooldownTracker())
-        MinecraftForge.EVENT_BUS.register(CustomNotifications())
-        MinecraftForge.EVENT_BUS.register(DamageSplash())
-        MinecraftForge.EVENT_BUS.register(DarkModeMist())
-        MinecraftForge.EVENT_BUS.register(DungeonFeatures())
-        MinecraftForge.EVENT_BUS.register(DungeonMap())
-        MinecraftForge.EVENT_BUS.register(DungeonTimer())
-        MinecraftForge.EVENT_BUS.register(EnchantNames())
-        MinecraftForge.EVENT_BUS.register(FarmingFeatures())
-        MinecraftForge.EVENT_BUS.register(FavoritePets())
-        MinecraftForge.EVENT_BUS.register(GlintCustomizer())
-        MinecraftForge.EVENT_BUS.register(GriffinBurrows())
-        MinecraftForge.EVENT_BUS.register(IceFillSolver())
-        MinecraftForge.EVENT_BUS.register(IcePathSolver())
-        MinecraftForge.EVENT_BUS.register(ItemFeatures())
-        MinecraftForge.EVENT_BUS.register(KeyShortcuts())
-        MinecraftForge.EVENT_BUS.register(LockOrb())
-        MinecraftForge.EVENT_BUS.register(MayorDiana())
-        MinecraftForge.EVENT_BUS.register(MayorJerry())
-        MinecraftForge.EVENT_BUS.register(MayorJerryTracker)
-        MinecraftForge.EVENT_BUS.register(MiningFeatures())
-        MinecraftForge.EVENT_BUS.register(MinionFeatures())
-        MinecraftForge.EVENT_BUS.register(MiscFeatures())
-        MinecraftForge.EVENT_BUS.register(MythologicalTracker())
-        MinecraftForge.EVENT_BUS.register(PetFeatures())
-        MinecraftForge.EVENT_BUS.register(Ping)
-        MinecraftForge.EVENT_BUS.register(ProtectItems())
-        MinecraftForge.EVENT_BUS.register(RainTimer())
-        MinecraftForge.EVENT_BUS.register(RelicWaypoints())
-        MinecraftForge.EVENT_BUS.register(ScoreCalculation)
-        MinecraftForge.EVENT_BUS.register(SelectAllColorSolver())
-        MinecraftForge.EVENT_BUS.register(ShootTheTargetSolver())
-        MinecraftForge.EVENT_BUS.register(SimonSaysSolver())
-        MinecraftForge.EVENT_BUS.register(SlayerFeatures())
-        MinecraftForge.EVENT_BUS.register(SpidersDenFeatures())
-        MinecraftForge.EVENT_BUS.register(SpiritLeap())
-        MinecraftForge.EVENT_BUS.register(StartsWithSequenceSolver())
-        MinecraftForge.EVENT_BUS.register(StupidTreasureChestOpeningThing)
-        MinecraftForge.EVENT_BUS.register(TankDisplayStuff())
-        MinecraftForge.EVENT_BUS.register(TechnoMayor())
-        MinecraftForge.EVENT_BUS.register(TeleportMazeSolver())
-        MinecraftForge.EVENT_BUS.register(TerminalFeatures())
-        MinecraftForge.EVENT_BUS.register(ThreeWeirdosSolver())
-        MinecraftForge.EVENT_BUS.register(TicTacToeSolver())
-        MinecraftForge.EVENT_BUS.register(TreasureHunter())
-        MinecraftForge.EVENT_BUS.register(TriviaSolver())
-        MinecraftForge.EVENT_BUS.register(WaterBoardSolver())
-        MinecraftForge.EVENT_BUS.register(Waypoints())
+            AlignmentTaskSolver(),
+            ArmorColor(),
+            AuctionData(),
+            AuctionPriceOverlay(),
+            BlazeSolver(),
+            BookHelper,
+            BossHPDisplays(),
+            BoulderSolver(),
+            ChatTabs,
+            ChestProfit(),
+            ClickInOrderSolver(),
+            CreeperSolver(),
+            CommandAliases(),
+            CooldownTracker(),
+            CustomNotifications(),
+            DamageSplash(),
+            DarkModeMist(),
+            DungeonFeatures(),
+            DungeonMap(),
+            DungeonTimer(),
+            EnchantNames(),
+            EnterToConfirmSignPopup(),
+            FarmingFeatures(),
+            FavoritePets(),
+            GlintCustomizer(),
+            GriffinBurrows(),
+            IceFillSolver(),
+            IcePathSolver(),
+            ItemFeatures(),
+            KeyShortcuts(),
+            LockOrb(),
+            MayorDiana(),
+            MayorJerry(),
+            MayorJerryTracker,
+            MiningFeatures(),
+            MinionFeatures(),
+            MiscFeatures(),
+            MythologicalTracker(),
+            PetFeatures(),
+            Ping,
+            ProtectItems(),
+            RainTimer(),
+            RelicWaypoints(),
+            ScoreCalculation,
+            SelectAllColorSolver(),
+            ShootTheTargetSolver(),
+            SimonSaysSolver(),
+            SlayerFeatures(),
+            SpidersDenFeatures(),
+            SpiritLeap(),
+            StartsWithSequenceSolver(),
+            StupidTreasureChestOpeningThing,
+            TankDisplayStuff(),
+            TechnoMayor(),
+            TeleportMazeSolver(),
+            TerminalFeatures(),
+            ThreeWeirdosSolver(),
+            TicTacToeSolver(),
+            TreasureHunter(),
+            TriviaSolver(),
+            WaterBoardSolver(),
+            Waypoints(),
+        ).forEach(MinecraftForge.EVENT_BUS::register)
     }
 
     @Mod.EventHandler
@@ -270,15 +275,16 @@ class Skytils {
         MayorInfo.fetchMayorData()
 
         MinecraftForge.EVENT_BUS.register(SpamHider())
-        Launch.classLoader.findClass("net.minecraft.client.gui.ServerListEntryNormal")
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onTick(event: TickEvent.ClientTickEvent) {
         if (event.phase != TickEvent.Phase.START) return
 
         ScreenRenderer.refresh()
 
+        ScoreboardUtil.sidebarLines = ScoreboardUtil.fetchScoreboardLines().map { ScoreboardUtil.cleanSB(it) }
+        TabListUtils.tabEntries = TabListUtils.fetchTabEntires().map { it to it.text }
         if (displayScreen != null) {
             mc.displayGuiScreen(displayScreen)
             displayScreen = null
@@ -298,9 +304,7 @@ class Skytils {
                 Utils.inSkyblock = Utils.isOnHypixel && mc.theWorld.scoreboard.getObjectiveInDisplaySlot(1)
                     ?.let { ScoreboardUtil.cleanSB(it.displayName).contains("SKYBLOCK") } ?: false
                 Utils.inDungeons = Utils.inSkyblock && ScoreboardUtil.sidebarLines.any {
-                    ScoreboardUtil.cleanSB(it).run {
-                        (contains("The Catacombs") && !contains("Queue")) || contains("Dungeon Cleared:")
-                    }
+                    (it.contains("The Catacombs") && !it.contains("Queue")) || it.contains("Dungeon Cleared:")
                 }
                 if (DevTools.getToggle("sprint"))
                     KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.keyCode, true)
@@ -365,7 +369,7 @@ class Skytils {
     fun onGuiChange(event: GuiOpenEvent) {
         val old = mc.currentScreen
         if (event.gui == null && config.reopenOptionsMenu) {
-            if (old is ReopenableGUI || (old is SettingsGui && (old as AccessorSettingsGui).config is Config)) {
+            if (old is ReopenableGUI || (old is AccessorSettingsGui && old.config is Config)) {
                 TickTask(1) {
                     displayScreen = OptionsGui()
                 }

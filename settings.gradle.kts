@@ -1,6 +1,6 @@
 /*
  * Skytils - Hypixel Skyblock Quality of Life Mod
- * Copyright (C) 2021 Skytils
+ * Copyright (C) 2022 Skytils
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -32,7 +32,6 @@ pluginManagement {
         eachPlugin {
             when (requested.id.id) {
                 "net.minecraftforge.gradle.forge" -> useModule("com.github.Skytils:ForgeGradle:${requested.version}")
-                "org.spongepowered.mixin" -> useModule("com.github.Skytils:mixingradle:${requested.version}")
             }
         }
     }
