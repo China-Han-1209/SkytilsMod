@@ -97,7 +97,6 @@ object ScoreCalculation {
     var speedScoreCancelled = 0
     var secondsCancelled = 6
     var mimicKilled = false
-    var bloodDoor = false
     var firstDeathHadSpirit = false
     var clearedPercentage = 0
     var secondsElapsed = 0.0
@@ -186,10 +185,10 @@ object ScoreCalculation {
                 }
 
                 val totalRoom = if(clearedPercentage > 0) floor(100f / clearedPercentage * completedRooms + 0.5).toInt() else 0
-                val roomClear = if (bloodDoor && !DungeonFeatures.hasBossSpawned) completedRooms + 1 else completedRooms
+                val roomClear = if (!DungeonFeatures.hasBossSpawned) completedRooms + 1 else completedRooms
                 val trueClearPercentage = if (totalRoom > 0) min((roomClear.toDouble() / totalRoom.toDouble()), 100.0) else 0.0
                 val puzzlePercentage = (puzzles - missingPuzzles - failedPuzzles).toDouble() / puzzles.toDouble()
-                val totalSkill = 20 + floor(60 * trueClearPercentage).toInt() + floor(20 * puzzlePercentage).toInt()
+                val totalSkill = 20 + floor(40 * trueClearPercentage).toInt() + floor(40 * puzzlePercentage).toInt()
                 val skillScore = max(0, totalSkill - (2 * deaths - if (firstDeathHadSpirit) 1 else 0))
                 val calcTotalSecrets = if (foundSecrets > 0 && secretsFoundPercentage > 0) floor(100f / secretsFoundPercentage * foundSecrets + 0.5) else 0.0
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage / 100f
@@ -256,9 +255,6 @@ object ScoreCalculation {
     fun onChatReceived(event: ClientChatReceivedEvent) {
         if (!Utils.inDungeons || mc.thePlayer == null) return
         val unformatted = event.message.unformattedText.stripControlCodes()
-        if(unformatted.contains("The BLOOD DOOR has been opened!")){
-            bloodDoor = true
-        }
         if (Skytils.config.scoreCalculationReceiveAssist) {
             if (unformatted.startsWith("Party > ")) {
                 if (unformatted.contains("\$SKYTILS-DUNGEON-SCORE-MIMIC$") || (Skytils.config.receiveHelpFromOtherModMimicDead && unformatted.containsAny(
@@ -319,14 +315,13 @@ object ScoreCalculation {
     @SubscribeEvent
     fun onWorldChange(event: WorldEvent.Load) {
         mimicKilled = false
-        bloodDoor = false
-        speedScoreCancelled = 0
-        secondsCancelled = 6
         firstDeathHadSpirit = false
         floorReq = floorRequirements["default"]!!
         perRoomPercentage = 0.0
         sent270Message = false
         sent300Message = false
+        speedScoreCancelled = 0
+        secondsCancelled = 6
     }
 
     init {
