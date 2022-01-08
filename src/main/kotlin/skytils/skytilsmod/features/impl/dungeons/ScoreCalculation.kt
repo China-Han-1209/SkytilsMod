@@ -74,7 +74,7 @@ object ScoreCalculation {
         "F4" to FloorRequirement(.6, 12 * 60),
         "F5" to FloorRequirement(.7),
         "F6" to FloorRequirement(.85),
-        "F7" to FloorRequirement(speed = 12 * 60),
+        "F7" to FloorRequirement(speed = 12 * 60 - 18),
         "M1" to FloorRequirement(speed = 8 * 60),
         "M2" to FloorRequirement(speed = 8 * 60),
         "M3" to FloorRequirement(speed = 8 * 60),
@@ -94,18 +94,12 @@ object ScoreCalculation {
     var completedRooms = 0
     var crypts = 0
     var secretsFoundPercentage = 0.000
-    var speedScoreCancelled = 0
-    var secondsCancelled = 6
     var mimicKilled = false
     var firstDeathHadSpirit = false
     var clearedPercentage = 0
     var secondsElapsed = 0.0
     var isPaul = false
-    var skillScore = 0
     var percentageSecretsFound = 0.0
-    var discoveryScore = 0
-    var speedScore = 0
-    var bonusScore = 0
     var perRoomPercentage = 0.0
     var sent270Message = false
     var sent300Message = false
@@ -185,10 +179,9 @@ object ScoreCalculation {
                 }
 
                 val totalRoom = if(clearedPercentage > 0) floor(100f / clearedPercentage * completedRooms + 0.5).toInt() else 0
-                val roomClear = if (!DungeonFeatures.hasBossSpawned) completedRooms + 1 else completedRooms
+                val roomClear = completedRooms + if (!DungeonFeatures.hasBossSpawned) 1 else 0 + if (DungeonTimer.bloodClearTime == -1L) 1 else 0
                 val trueClearPercentage = if (totalRoom > 0) min((roomClear.toDouble() / totalRoom.toDouble()), 100.0) else 0.0
-                val puzzlePercentage = (puzzles - missingPuzzles - failedPuzzles).toDouble() / puzzles.toDouble()
-                val totalSkill = 20 + floor(40 * trueClearPercentage).toInt() + floor(40 * puzzlePercentage).toInt()
+                val totalSkill = max(20, 20 + floor(80 * trueClearPercentage).toInt() - 10 * (missingPuzzles + failedPuzzles))
                 val skillScore = max(0, totalSkill - (2 * deaths - if (firstDeathHadSpirit) 1 else 0))
                 val calcTotalSecrets = if (foundSecrets > 0 && secretsFoundPercentage > 0) floor(100f / secretsFoundPercentage * foundSecrets + 0.5) else 0.0
                 val secretFoundRequirementPercentage = secretsFoundPercentage / floorReq.secretPercentage / 100f
@@ -202,11 +195,10 @@ object ScoreCalculation {
                 val discoveryScore = roomClearScore + secretScore
                 val bonusScore = (if (mimicKilled) 2 else 0) + crypts.coerceAtMost(5) + if (isPaul) 10 else 0
                 val countedSeconds = secondsElapsed
-                if(countedSeconds.toInt() - secondsCancelled >= floorReq.speed && speedScoreCancelled < 100){
-                    speedScoreCancelled++
-                    secondsCancelled += (speedScoreCancelled / 10 + 1) * 6
-                }
-                val speedScore = max(0, 100 - speedScoreCancelled)
+                val overtime = countedSeconds - floorReq.speed
+                val t = if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F7", "M7")) 7 else 6
+                val x = floor((-5.0 * t + sqrt((5.0 * t).pow(2) + 20.0 * t * overtime)) / (10.0 * t)).toInt()
+                val speedScore = max(0.0, min(100.0, 100 - 10 * x - (overtime - (5 * t * x + 5 * t * x * x)) / ((x + 1) * t)))
                 val score = (skillScore + discoveryScore + speedScore + bonusScore).toInt()
                 val rank = if (score < 100) "§cD" else if (score < 160) "§9C" else if (score < 230) "§aB" else if (score < 270) "§5A" else if (score < 300) "§eS" else "§6S+"
                 if (Skytils.config.sendMessageOn270Score && !sent270Message && score >= 270) {
@@ -320,8 +312,6 @@ object ScoreCalculation {
         perRoomPercentage = 0.0
         sent270Message = false
         sent300Message = false
-        speedScoreCancelled = 0
-        secondsCancelled = 6
     }
 
     init {
