@@ -74,7 +74,7 @@ object ScoreCalculation {
         "F4" to FloorRequirement(.6, 12 * 60),
         "F5" to FloorRequirement(.7),
         "F6" to FloorRequirement(.85),
-        "F7" to FloorRequirement(speed = 12 * 60 - 18),
+        "F7" to FloorRequirement(speed = 12 * 60),
         "M1" to FloorRequirement(speed = 8 * 60),
         "M2" to FloorRequirement(speed = 8 * 60),
         "M3" to FloorRequirement(speed = 8 * 60),
@@ -197,8 +197,8 @@ object ScoreCalculation {
                 val countedSeconds = secondsElapsed
                 val overtime = countedSeconds - floorReq.speed
                 val t = if (Utils.equalsOneOf(DungeonFeatures.dungeonFloor, "F7", "M7")) 7 else 6
-                val x = floor((-5.0 * t + sqrt((5.0 * t).pow(2) + 20.0 * t * overtime)) / (10.0 * t)).toInt()
-                val speedScore = max(0.0, min(100.0, 100 - 10 * x - (overtime - (5 * t * x + 5 * t * x * x)) / ((x + 1) * t)))
+                val x = ((-5.0 * t + sqrt((5.0 * t).pow(2) + 20.0 * t * overtime)) / (10.0 * t)).toInt()
+                val speedScore = (100 - 10 * x - (overtime - (5 * t * x + 5 * t * x * x)) / ((x + 1) * t)).toInt().coerceIn(0, 100)
                 val score = (skillScore + discoveryScore + speedScore + bonusScore).toInt()
                 val rank = if (score < 100) "§cD" else if (score < 160) "§9C" else if (score < 230) "§aB" else if (score < 270) "§5A" else if (score < 300) "§eS" else "§6S+"
                 if (Skytils.config.sendMessageOn270Score && !sent270Message && score >= 270) {
